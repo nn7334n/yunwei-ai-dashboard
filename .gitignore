@@ -1,0 +1,32 @@
+# 密钥与敏感凭证 (坚决不能公开)
+.webui_secret_key
+*.key
+*.pem
+*.token
+
+# 内部交付与交接机密文档
+HANDOVER.md
+DELIVERY_SPEC.md
+
+# Python 缓存与运行临时文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.log
+venv/
+.venv/
+env/
+.env
+!server.py
+
+# 操作系统临时文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# macOS App 打包体 (建议打包成 zip 放在 GitHub Release 中供下载，避免仓库膨胀)
+AI控制面板.app/

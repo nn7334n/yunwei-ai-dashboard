@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 服务控制面板 - 云微传媒</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0d1117;
+  --card: #161b22;
+  --card-hover: #21262d;
+  --border: #30363d;
+  --border-active: #58a6ff;
+  --text: #c9d1d9;
+  --text-title: #f0f6fc;
+  --text-dim: #8b949e;
+  --accent: #58a6ff;
+  --accent-gradient: linear-gradient(135deg, #1f6feb, #388bfd);
+  --green: #2ea043;
+  --green-glow: rgba(46, 160, 67, 0.4);
+  --red: #f85149;
+  --red-glow: rgba(248, 81, 73, 0.4);
+  --orange: #d29922;
+  --purple: #a371f7;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 24px 20px 60px;
+  max-width: 1100px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.header-title h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-title);
+  letter-spacing: -0.5px;
+}
+.header-title h1 span { color: var(--accent); }
+.header-title .tagline {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.refresh-btn {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.refresh-btn:hover { background: var(--card-hover); color: var(--text-title); border-color: var(--accent); }
+
+/* Status Cards Grid */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 24px 0 16px;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.card:hover { border-color: rgba(88, 166, 255, 0.4); }
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.card-label {
+  font-size: 13px;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+.dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  background: var(--text-dim);
+}
+.dot.on { background: var(--green); box-shadow: 0 0 10px var(--green-glow); }
+.dot.off { background: var(--red); box-shadow: 0 0 8px var(--red-glow); }
+.dot.transition { background: var(--orange); animation: pulse 1s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } }
+
+.card-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-title);
+  margin-bottom: 6px;
+}
+.card-sub {
+  font-size: 12px;
+  color: var(--text-dim);
+  min-height: 18px;
+}
+.card-sub .badge-loaded {
+  background: rgba(88, 166, 255, 0.15);
+  color: var(--accent);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+.card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.btn-card {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+.btn-card:hover { border-color: var(--accent); color: #fff; }
+.btn-card.start:hover { border-color: var(--green); color: var(--green); }
+.btn-card.stop:hover { border-color: var(--red); color: var(--red); }
+.btn-card:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Control Bar */
+.control-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.btn {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text-title);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn-primary {
+  background: var(--accent-gradient);
+  border: none;
+  color: #fff;
+}
+.btn-primary:hover { box-shadow: 0 4px 16px rgba(31,111,235,0.4); }
+.btn-danger {
+  background: linear-gradient(135deg, #da3633, #b62324);
+  border: none;
+  color: #fff;
+}
+.btn-danger:hover { box-shadow: 0 4px 16px rgba(218,54,51,0.4); }
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+.btn-outline:hover { background: rgba(88,166,255,0.1); }
+.btn-unload {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+.btn-unload:hover { background: rgba(210,153,34,0.1); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+/* Download Progress Card */
+.pull-progress-card {
+  background: #111827;
+  border: 1px solid #1f6feb;
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 24px rgba(31,111,235,0.15);
+  display: none;
+}
+.pull-progress-card.show { display: block; animation: fadeIn 0.3s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+.pull-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.pull-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pull-bar-container {
+  height: 8px;
+  background: #21262d;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.pull-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #1f6feb, #58a6ff);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+.pull-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.pull-meta-left { font-weight: 500; color: var(--text); }
+
+/* Section */
+.section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.section-header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+}
+.section-header h2 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-title);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-header .count-badge {
+  font-size: 11px;
+  background: #21262d;
+  color: var(--text-dim);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.section-header .arrow {
+  color: var(--text-dim);
+  transition: transform 0.25s;
+  font-size: 12px;
+}
+.section-header.open .arrow { transform: rotate(180deg); }
+.section-body {
+  padding: 20px;
+  display: none;
+}
+.section-body.open { display: block; }
+
+/* Installed Models */
+.model-list { display: flex; flex-direction: column; gap: 10px; }
+.model-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+.model-item:hover { border-color: rgba(88, 166, 255, 0.4); background: #13171e; }
+.model-info { display: flex; flex-direction: column; gap: 4px; }
+.model-title-row { display: flex; align-items: center; gap: 10px; }
+.model-name { font-weight: 600; font-size: 14px; color: var(--text-title); }
+.model-tags { display: flex; gap: 6px; }
+.tag {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #21262d;
+  color: var(--text-dim);
+}
+.tag-size { color: var(--accent); background: rgba(88, 166, 255, 0.1); }
+.tag-running {
+  color: #3fb950;
+  background: rgba(46, 160, 67, 0.15);
+  border: 1px solid rgba(46, 160, 67, 0.3);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.tag-idle {
+  color: var(--text-dim);
+  background: #21262d;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.model-actions { display: flex; gap: 8px; }
+.btn-sm {
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-sm:hover { border-color: var(--accent); color: #fff; }
+.btn-sm.primary:hover { border-color: var(--accent); background: rgba(88,166,255,0.15); color: var(--accent); }
+.btn-sm.danger:hover { border-color: var(--red); color: var(--red); }
+.btn-sm.success { border-color: rgba(46, 160, 67, 0.4); color: #3fb950; }
+.btn-sm.success:hover { border-color: #2ea043; background: rgba(46, 160, 67, 0.15); color: #3fb950; }
+.btn-sm.warning { border-color: rgba(210, 153, 34, 0.4); color: #d29922; }
+.btn-sm.warning:hover { border-color: #d29922; background: rgba(210, 153, 34, 0.15); color: #e3b341; }
+
+/* Online Models Tabs */
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.tab {
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tab:hover { color: var(--text-title); border-color: #58a6ff; }
+.tab.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.online-models { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 12px; }
+.online-model-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+.online-model-card:hover { border-color: rgba(88, 166, 255, 0.4); }
+.online-model-name { font-weight: 600; font-size: 14px; color: var(--accent); margin-bottom: 4px; }
+.online-model-desc { font-size: 12px; color: var(--text-dim); margin-bottom: 12px; min-height: 32px; }
+.online-model-footer { display: flex; justify-content: space-between; align-items: center; }
+
+/* Input */
+.input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.input-group input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input-group input:focus { border-color: var(--accent); }
+.input-group input::placeholder { color: var(--text-dim); }
+
+/* System Info */
+.sys-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.sys-item {
+  background: var(--bg);
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+.sys-item .label { font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
+.sys-item .value { font-size: 15px; font-weight: 600; color: var(--text-title); }
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.modal-overlay.show { opacity: 1; pointer-events: auto; }
+.modal-dialog {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  transform: translateY(15px);
+  transition: transform 0.2s ease;
+}
+.modal-overlay.show .modal-dialog { transform: translateY(0); }
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-header h3 { font-size: 16px; color: var(--text-title); font-weight: 600; }
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+}
+.modal-close:hover { color: #fff; }
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.modal-prompt-box {
+  width: 100%;
+  height: 80px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 10px 14px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+}
+.modal-prompt-box:focus { border-color: var(--accent); }
+.modal-presets {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.preset-tag {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: #21262d;
+  color: var(--text-dim);
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.preset-tag:hover { border-color: var(--accent); color: var(--text-title); }
+.modal-result-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  min-height: 120px;
+  max-height: 280px;
+  overflow-y: auto;
+  color: var(--text-title);
+}
+.modal-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 2000;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: var(--green); color: #fff; }
+.toast.error { border-color: var(--red); color: #fff; }
+
+/* Loading Spinner */
+.spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* LAN Badge */
+.lan-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(88, 166, 255, 0.1);
+  border: 1px solid rgba(88, 166, 255, 0.3);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  color: var(--accent);
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+.lan-badge:hover {
+  background: rgba(88, 166, 255, 0.2);
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(88, 166, 255, 0.2);
+}
+.lan-badge .dot-live {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+}
+.lan-badge .copy-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  background: #21262d;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Wizard Banner */
+.wizard-banner {
+  background: linear-gradient(135deg, rgba(31, 111, 235, 0.15), rgba(56, 139, 253, 0.05));
+  border: 1px solid rgba(88, 166, 255, 0.35);
+  border-radius: var(--radius);
+  padding: 18px 24px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+.wizard-left { display: flex; flex-direction: column; gap: 6px; }
+.wizard-tag { font-size: 11px; font-weight: 600; color: #58a6ff; text-transform: uppercase; letter-spacing: 0.5px; }
+.wizard-title { font-size: 17px; font-weight: 700; color: var(--text-title); }
+.wizard-desc { font-size: 13px; color: var(--text-dim); }
+.wizard-combo-pills { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+.wizard-pill {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: #21262d;
+  color: var(--text-title);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-wizard {
+  background: linear-gradient(135deg, #1f6feb, #238636);
+  color: #fff;
+  border: none;
+  padding: 12px 22px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(35, 134, 54, 0.3);
+}
+.btn-wizard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(35, 134, 54, 0.45);
+}
+
+.btn-card.deploy {
+  background: linear-gradient(135deg, rgba(210, 153, 34, 0.25), rgba(210, 153, 34, 0.1));
+  border: 1px solid rgba(210, 153, 34, 0.5);
+  color: #e3b341;
+  font-weight: 600;
+}
+.btn-card.deploy:hover {
+  background: rgba(210, 153, 34, 0.3);
+  border-color: #e3b341;
+}
+.dot.warning {
+  background: #d29922;
+  box-shadow: 0 0 6px rgba(210, 153, 34, 0.6);
+}
+
+/* 引流与商业方案按钮样式 */
+.nav-btn {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 8px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: all 0.2s;
+  user-select: none;
+}
+.nav-btn:hover { background: var(--card-hover); color: var(--text-title); border-color: var(--accent); }
+.nav-btn-biz {
+  background: linear-gradient(135deg, rgba(210, 153, 34, 0.15), rgba(248, 81, 73, 0.1));
+  border-color: rgba(210, 153, 34, 0.4);
+  color: #e3b341;
+  font-weight: 500;
+}
+.nav-btn-biz:hover {
+  background: linear-gradient(135deg, rgba(210, 153, 34, 0.25), rgba(248, 81, 73, 0.2));
+  border-color: #e3b341;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(210, 153, 34, 0.3);
+}
+.nav-btn-community {
+  background: linear-gradient(135deg, rgba(46, 160, 67, 0.15), rgba(88, 166, 255, 0.1));
+  border-color: rgba(46, 160, 67, 0.4);
+  color: #3fb950;
+  font-weight: 500;
+}
+.nav-btn-community:hover {
+  background: linear-gradient(135deg, rgba(46, 160, 67, 0.25), rgba(88, 166, 255, 0.2));
+  border-color: #3fb950;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(46, 160, 67, 0.3);
+}
+
+/* 底部商业矩阵 Banner 样式 */
+.biz-banner {
+  background: linear-gradient(135deg, #161b22, #1f242c);
+  border: 1px solid rgba(88, 166, 255, 0.3);
+  border-radius: var(--radius);
+  padding: 18px 24px;
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.biz-banner-left { display: flex; flex-direction: column; gap: 4px; }
+.biz-banner-tag { font-size: 11px; font-weight: 600; color: #58a6ff; letter-spacing: 0.5px; }
+.biz-banner-title { font-size: 15px; font-weight: 700; color: var(--text-title); display: flex; align-items: center; gap: 8px; }
+.biz-banner-desc { font-size: 13px; color: var(--text-dim); }
+.biz-banner-actions { display: flex; gap: 10px; flex-shrink: 0; }
+.btn-biz-primary {
+  background: linear-gradient(135deg, #1f6feb, #388bfd);
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+.btn-biz-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(31, 111, 235, 0.4); }
+.btn-biz-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-title);
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-biz-secondary:hover { background: rgba(255, 255, 255, 0.12); border-color: var(--accent); }
+
+/* 商业与社群模态弹窗样式 */
+.biz-modal-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
+.biz-tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.biz-tab-btn.active {
+  background: var(--card-hover);
+  color: var(--text-title);
+  border-bottom: 2px solid var(--accent);
+}
+.biz-tab-content { display: none; }
+.biz-tab-content.active { display: flex; flex-direction: column; gap: 14px; }
+.prod-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.prod-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 0.2s;
+}
+.prod-card:hover { border-color: var(--accent); }
+.prod-title { font-size: 13px; font-weight: 600; color: var(--text-title); display: flex; align-items: center; justify-content: space-between; }
+.prod-tag { font-size: 10px; background: rgba(88, 166, 255, 0.15); color: #58a6ff; padding: 2px 6px; border-radius: 4px; }
+.prod-desc { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+.wechat-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.wechat-info { display: flex; flex-direction: column; gap: 4px; }
+.gift-list {
+  background: rgba(46, 160, 67, 0.08);
+  border: 1px solid rgba(46, 160, 67, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+@media (max-width: 800px) {
+  .cards { grid-template-columns: 1fr; }
+  .sys-grid { grid-template-columns: 1fr 1fr; }
+  .control-bar { flex-direction: column; }
+  .btn { width: 100%; justify-content: center; }
+  .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .header-actions { width: 100%; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .wizard-banner { flex-direction: column; align-items: stretch; }
+  .btn-wizard { width: 100%; text-align: center; }
+  .biz-banner { flex-direction: column; align-items: stretch; }
+  .biz-banner-actions { flex-direction: column; }
+  .prod-grid { grid-template-columns: 1fr; }
+  .wechat-box { flex-direction: column; align-items: stretch; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">
+    <h1>AI <span>控制面板</span></h1>
+    <div class="tagline" id="header-tagline">小白也能一键搭建的本地 AI 智算平台 · 智能推荐大模型 · 一键部署 Web 对话 · 支持内网对接知识库</div>
+  </div>
+  <div class="header-actions">
+    <button class="nav-btn nav-btn-community" onclick="openBizModal('community')" title="点击加入交流群并领取资料包">
+      💬 交流群 / 领资料
+    </button>
+    <button class="nav-btn nav-btn-biz" onclick="openBizModal('products')" title="点击查看企业级商业产品矩阵与源码交付">
+      🚀 企业商业方案
+    </button>
+    <div id="lan-badge" class="lan-badge" style="display: none;" onclick="copyLanUrl()" title="点击复制局域网访问地址">
+      <span class="dot-live"></span>
+      <span>手机/局域网: <strong id="lan-url-text"></strong></span>
+      <span class="copy-hint">复制</span>
+    </div>
+    <button class="refresh-btn" onclick="refreshAll()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg>
+      刷新状态
+    </button>
+  </div>
+</div>
+
+<!-- Hardware Tier & One-Click Wizard Banner -->
+<div id="hardware-wizard-banner" class="wizard-banner" style="display: none;">
+  <div class="wizard-left">
+    <div class="wizard-tag" id="wizard-tag">🖥️ 智能硬件算力评测</div>
+    <div class="wizard-title" id="wizard-title">32GB 专业旗舰配置 · 算力充沛</div>
+    <div class="wizard-desc" id="wizard-desc">已为您智能匹配当前硬件的最佳全家桶搭配，无需纠结参数，一键秒级安装！</div>
+    <div class="wizard-combo-pills" id="wizard-pills">
+      <!-- pills populated by JS -->
+    </div>
+  </div>
+  <div class="wizard-right">
+    <button class="btn-wizard" id="btn-batch-install" onclick="installRecommendedCombo()">
+      ⚡ 一键部署黄金推荐全家桶
+    </button>
+  </div>
+</div>
+
+<!-- Status Cards -->
+<div class="cards">
+  <!-- Ollama Card -->
+  <div class="card">
+    <div>
+      <div class="card-header">
+        <div class="card-label"><span class="dot off" id="dot-ollama"></span> Ollama 推理引擎</div>
+      </div>
+      <div class="card-value" id="ollama-status">--</div>
+      <div class="card-sub" id="ollama-mem">显存/内存: --</div>
+    </div>
+    <div class="card-actions">
+      <button class="btn-card start" id="btn-ollama-toggle" onclick="toggleOllama()">启动</button>
+      <button class="btn-card" title="立即卸载当前驻留内存的模型" onclick="unloadModel()">释放内存</button>
+    </div>
+  </div>
+
+  <!-- Open WebUI Card -->
+  <div class="card">
+    <div>
+      <div class="card-header">
+        <div class="card-label"><span class="dot off" id="dot-webui"></span> Open WebUI 界面</div>
+      </div>
+      <div class="card-value" id="webui-status">--</div>
+      <div class="card-sub" id="webui-mem">内存: --</div>
+    </div>
+    <div class="card-actions">
+      <button class="btn-card start" id="btn-webui-toggle" onclick="toggleWebUI()">启动</button>
+      <button class="btn-card" onclick="openWebUI()">访问界面</button>
+    </div>
+  </div>
+
+  <!-- Total Memory Card -->
+  <div class="card">
+    <div>
+      <div class="card-header">
+        <div class="card-label">总内存占用 (AI服务)</div>
+      </div>
+      <div class="card-value" id="total-mem">-- GB</div>
+      <div class="card-sub" id="total-sub">32GB 统一内存已就绪</div>
+    </div>
+    <div class="card-actions">
+      <button class="btn-card" onclick="unloadModel()">一键释放模型</button>
+      <button class="btn-card stop" onclick="control('all/stop', this)">彻底关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="control-bar">
+  <button class="btn btn-primary" id="btn-all-start" onclick="control('all/start', this)">全部启动</button>
+  <button class="btn btn-danger" id="btn-all-stop" onclick="control('all/stop', this)">全部关闭 (释放资源)</button>
+  <button class="btn btn-outline" onclick="openWebUI()">打开 Open WebUI (8080)</button>
+  <button class="btn btn-unload" onclick="unloadModel()">释放模型显存</button>
+</div>
+
+<!-- Download Progress Section -->
+<div class="pull-progress-card" id="pull-progress-card">
+  <div class="pull-header">
+    <div class="pull-title">
+      <span class="spinner"></span>
+      <span>正在下载模型: <strong id="pull-model-name" style="color:var(--accent);">--</strong></span>
+    </div>
+    <button class="btn-sm danger" onclick="cancelPull()">取消下载</button>
+  </div>
+  <div class="pull-bar-container">
+    <div class="pull-bar" id="pull-bar"></div>
+  </div>
+  <div class="pull-meta">
+    <div class="pull-meta-left" id="pull-status-text">连接中...</div>
+    <div id="pull-speed-text">-- MB/s · 剩余 --</div>
+  </div>
+</div>
+
+<!-- Installed Models -->
+<div class="section">
+  <div class="section-header open" onclick="toggleSection(this)">
+    <h2>已安装模型 <span class="count-badge" id="models-count">0</span></h2>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="section-body open" id="installed-models">
+    <div class="empty">加载模型列表中...</div>
+  </div>
+</div>
+
+<!-- Online Install -->
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <h2>在线安装推荐模型</h2>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="section-body" id="online-section">
+    <div class="input-group">
+      <input type="text" id="custom-model" placeholder="输入 Ollama 官方模型名，如 qwen2.5:14b 或 deepseek-r1:14b">
+      <button class="btn btn-primary" onclick="pullCustom()">立即安装</button>
+    </div>
+    <div class="tabs" id="category-tabs"></div>
+    <div class="online-models" id="online-models"></div>
+  </div>
+</div>
+
+<!-- System Info -->
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <h2>Mac Studio 硬件状态</h2>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="section-body" id="system-info">
+    <div class="empty">加载系统信息中...</div>
+  </div>
+</div>
+
+<!-- Commercial Ecosystem Banner -->
+<div class="biz-banner">
+  <div class="biz-banner-left">
+    <div class="biz-banner-tag">💼 广州云微传媒 · 企业级数字化与 AI 商业解决方案</div>
+    <div class="biz-banner-title">
+      需要更强大的公网多端协同、私域获客或文娱商业系统？
+    </div>
+    <div class="biz-banner-desc">
+      官方提供成熟源码交付与定制二开：微信小店推客分销 · AI 短视频/图文矩阵获客 · 企业专属智能员工知识库 · 抖音/微信短剧全套系统
+    </div>
+  </div>
+  <div class="biz-banner-actions">
+    <button class="btn-biz-secondary" onclick="openBizModal('community')">💬 技术咨询 / 进群</button>
+    <button class="btn-biz-primary" onclick="openBizModal('products')">🚀 查看商业产品全家桶</button>
+  </div>
+</div>
+
+<!-- Model Test Modal -->
+<div class="modal-overlay" id="test-modal">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 id="modal-model-title">测试模型</h3>
+      <button class="modal-close" onclick="closeTestModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <textarea class="modal-prompt-box" id="test-prompt" placeholder="输入你想测试的提示词...">你好，请用一句话介绍你自己，并说明你的核心优势。</textarea>
+      <div class="modal-presets">
+        <span class="preset-tag" onclick="setPrompt('你好，请用一句话介绍你自己，并说明你的核心优势。')">自我介绍</span>
+        <span class="preset-tag" onclick="setPrompt('请用 Python 写一个高效的多线程下载示例函数。')">代码生成</span>
+        <span class="preset-tag" onclick="setPrompt('桌上有5个苹果，吃了2个又买了3个，现在有几个？请给出逐步推理过程。')">逻辑推理</span>
+        <span class="preset-tag" onclick="setPrompt('请为一款本地AI控制台写一段吸引程序员的50字产品宣传语。')">文案创作</span>
+      </div>
+      <div class="modal-result-box" id="test-result">点击下方“发送测试”开始推理...</div>
+      <div class="modal-meta-row">
+        <span id="test-time-badge">推理耗时: --</span>
+        <button class="btn-sm" onclick="copyTestResult()">复制回复</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="btn-run-test" onclick="executeTest()">发送测试</button>
+      <button class="btn-sm" onclick="closeTestModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- Open WebUI Deploy Modal -->
+<div class="modal-overlay" id="webui-install-modal">
+  <div class="modal-dialog" style="max-width: 680px;">
+    <div class="modal-header">
+      <h3 style="display: flex; align-items: center; gap: 8px;">🚀 Open WebUI 一键全自动部署</h3>
+      <button class="modal-close" onclick="closeWebUIModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size: 13px; color: var(--text-dim); line-height: 1.5;">
+        系统将全自动为您创建独立隔离的 Python 虚拟环境，并使用国内高速 PyPI 镜像（清华源）下载并安装 Open WebUI。全程无需打开终端敲代码：
+      </div>
+      <div style="margin: 10px 0;">
+        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
+          <span id="webui-step-text" style="color: var(--accent); font-weight: 600;">准备安装...</span>
+          <span id="webui-progress-text" style="color: var(--text-title); font-weight: 600;">0%</span>
+        </div>
+        <div style="height: 8px; background: #21262d; border-radius: 4px; overflow: hidden;">
+          <div id="webui-progress-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #1f6feb, #2ea043); transition: width 0.3s ease;"></div>
+        </div>
+      </div>
+      <div id="webui-install-log" style="background: #0d1117; border: 1px solid var(--border); border-radius: 6px; padding: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 11px; color: #8b949e; height: 210px; overflow-y: auto; line-height: 1.5; white-space: pre-wrap;">
+[准备就绪] 点击下方“开始自动部署”按钮启动环境构建...
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closeWebUIModal()">关闭</button>
+      <button class="btn btn-primary" id="btn-start-webui-install" onclick="startWebUIInstall()">开始一键部署</button>
+    </div>
+  </div>
+</div>
+
+<!-- Business & Community Modal -->
+<div class="modal-overlay" id="biz-modal">
+  <div class="modal-dialog" style="max-width: 680px;">
+    <div class="modal-header">
+      <h3 style="display: flex; align-items: center; gap: 8px;">
+        <span>🚀 云微传媒 · 商业生态与技术交流</span>
+      </h3>
+      <button class="modal-close" onclick="closeBizModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="biz-modal-tabs">
+        <button class="biz-tab-btn active" data-tab="community" onclick="switchBizTab('community')">🎁 进群交流 & 领干货资料</button>
+        <button class="biz-tab-btn" data-tab="products" onclick="switchBizTab('products')">💼 企业商业系统全家桶</button>
+      </div>
+
+      <!-- Tab 1: Community & Gifts -->
+      <div class="biz-tab-content active" id="biz-tab-community">
+        <div class="wechat-box">
+          <div class="wechat-info">
+            <div style="font-size: 14px; font-weight: 700; color: var(--text-title);">官方微信客服 / 交流社群</div>
+            <div style="font-size: 12px; color: var(--text-dim);">添加官方微信，进入本地大模型落地与 AI 应用技术交流群</div>
+            <div style="margin-top: 6px; font-size: 13px; color: #58a6ff; font-family: monospace;">微信号：<strong>nn7334n</strong> (电话: 18922454490)</div>
+          </div>
+          <button class="btn-sm" style="padding: 8px 16px; background: var(--green); color: #fff; border: none; font-weight: 600; cursor: pointer;" onclick="copyWechatId('nn7334n')">一键复制微信号</button>
+        </div>
+
+        <div class="gift-list">
+          <strong style="color: var(--green); display: block; margin-bottom: 6px;">🎁 添加微信并备注【AI】，免费赠送精选独家干货包：</strong>
+          • <strong>《2026 企业本地大模型与知识库私有化落地全指南》</strong>（实战落地手册 PDF）<br>
+          • <strong>《50+ 行业企业级高质量提示词与知识库语料库精粹》</strong>（电商/客服/代码/营销）<br>
+          • <strong>《主流开源大模型（Qwen2.5/DeepSeek-R1/Llama3）硬件适配与实测横评表》</strong><br>
+          • 遇到本地部署或模型加载报错？社群内工程师 1 对 1 免费答疑支持！
+        </div>
+      </div>
+
+      <!-- Tab 2: Commercial Products -->
+      <div class="biz-tab-content" id="biz-tab-products">
+        <div style="font-size: 13px; color: var(--text-dim); margin-bottom: 4px;">
+          云微传媒所有商用系统均提供<strong>可演示、可部署、可二开、可验收</strong>保障，支持源码交付：
+        </div>
+        <div class="prod-grid">
+          <div class="prod-card">
+            <div class="prod-title">
+              <span>🛍️ 微信小店推客系统</span>
+              <span class="prod-tag">电商裂变</span>
+            </div>
+            <div class="prod-desc">基于微信小店生态的推客招募、商品分佣、私域裂变体系，支持独立部署与完整源码交付。</div>
+          </div>
+          <div class="prod-card">
+            <div class="prod-title">
+              <span>🤖 AI 矩阵获客系统</span>
+              <span class="prod-tag">获客爆款</span>
+            </div>
+            <div class="prod-desc">抖音/小红书/视频号多平台内容智能批量生产、热点监控、线索自动承接转化。</div>
+          </div>
+          <div class="prod-card">
+            <div class="prod-title">
+              <span>🏢 AI 智能员工/知识库商业版</span>
+              <span class="prod-tag">私有协同</span>
+            </div>
+            <div class="prod-desc">多部门权限隔离、公网多端协作、微信生态对接，打造企业专属可调优私有智脑。</div>
+          </div>
+          <div class="prod-card">
+            <div class="prod-title">
+              <span>🎬 文娱短剧全矩阵系统</span>
+              <span class="prod-tag">文娱变现</span>
+            </div>
+            <div class="prod-desc">短剧双端 APP（看广告变现）、抖音/微信短剧小程序、海外 CPS 分销全套系统。</div>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg); border: 1px solid var(--border); padding: 12px 16px; border-radius: var(--radius-sm); margin-top: 4px;">
+          <span style="font-size: 12px; color: var(--text-dim);">欢迎企业与团队洽谈定制开发与源码采购：</span>
+          <a href="https://www.dyman.cn" target="_blank" class="btn-biz-primary" style="font-size: 12px; padding: 6px 14px;">访问官方网站 dyman.cn ↗</a>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closeBizModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let onlineModelsData = {};
+let currentActiveTestModel = '';
+let isOllamaRunning = false;
+let isWebUIRunning = false;
+let pullPoller = null;
+
+// ===== 引流与商业弹窗逻辑 =====
+function openBizModal(tab = 'community') {
+  const modal = document.getElementById('biz-modal');
+  if (!modal) return;
+  switchBizTab(tab);
+  modal.classList.add('show');
+}
+
+function closeBizModal() {
+  const modal = document.getElementById('biz-modal');
+  if (modal) modal.classList.remove('show');
+}
+
+function switchBizTab(tabName) {
+  const tabs = document.querySelectorAll('.biz-tab-btn');
+  const contents = document.querySelectorAll('.biz-tab-content');
+  tabs.forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tabName);
+  });
+  contents.forEach(c => {
+    c.classList.toggle('active', c.id === `biz-tab-${tabName}`);
+  });
+}
+
+function copyWechatId(id = 'nn7334n') {
+  navigator.clipboard.writeText(id).then(() => {
+    toast(`官方微信号 ${id} 已成功复制到剪贴板！`, 'success');
+  }).catch(() => {
+    toast(`微信号: ${id} (可直接添加)`, '');
+  });
+}
+
+// ===== API 封装 =====
+async function api(path, method = 'GET', body = null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  try {
+    const r = await fetch(`${API}/api/${path}`, opts);
+    return await r.json();
+  } catch (err) {
+    return { ok: false, msg: '网络或后端连接失败: ' + err.message };
+  }
+}
+
+// ===== UI 提示 =====
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + type;
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+function toggleSection(header) {
+  header.classList.toggle('open');
+  const body = header.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+// ===== 状态检测与更新 =====
+async function loadStatus() {
+  const d = await api('status');
+  if (!d || !d.ollama) return;
+
+  isOllamaRunning = d.ollama.running;
+  isWebUIRunning = d.webui.running;
+
+  // Ollama 卡片
+  const dotOllama = document.getElementById('dot-ollama');
+  const txtOllama = document.getElementById('ollama-status');
+  const memOllama = document.getElementById('ollama-mem');
+  const btnOllama = document.getElementById('btn-ollama-toggle');
+
+  if (d.ollama.running) {
+    dotOllama.className = 'dot on';
+    txtOllama.textContent = '运行中';
+    let loadedText = '';
+    if (d.ollama.loaded_models && d.ollama.loaded_models.length > 0) {
+      const names = d.ollama.loaded_models.map(m => `${m.name} (${m.vram}GB)`).join(', ');
+      loadedText = ` · <span class="badge-loaded">${names}</span>`;
+    }
+    memOllama.innerHTML = `显存占用: ${d.ollama.mem} GB${loadedText}`;
+    btnOllama.textContent = '停止';
+    btnOllama.className = 'btn-card stop';
+  } else {
+    dotOllama.className = 'dot off';
+    txtOllama.textContent = '已停止';
+    memOllama.textContent = '显存占用: 0 GB';
+    btnOllama.textContent = '启动';
+    btnOllama.className = 'btn-card start';
+  }
+
+  // WebUI 卡片
+  const dotWebui = document.getElementById('dot-webui');
+  const txtWebui = document.getElementById('webui-status');
+  const memWebui = document.getElementById('webui-mem');
+  const btnWebui = document.getElementById('btn-webui-toggle');
+
+  if (d.webui.installed === false) {
+    dotWebui.className = 'dot warning';
+    txtWebui.textContent = '未安装';
+    memWebui.textContent = '点击一键极速部署 Open WebUI';
+    btnWebui.textContent = '一键部署';
+    btnWebui.className = 'btn-card deploy';
+  } else if (d.webui.running) {
+    dotWebui.className = 'dot on';
+    txtWebui.textContent = '运行中';
+    memWebui.textContent = `内存占用: ${d.webui.mem} GB`;
+    btnWebui.textContent = '停止';
+    btnWebui.className = 'btn-card stop';
+  } else {
+    dotWebui.className = 'dot off';
+    txtWebui.textContent = '已停止';
+    memWebui.textContent = '内存占用: 0 GB';
+    btnWebui.textContent = '启动';
+    btnWebui.className = 'btn-card start';
+  }
+
+  // 总内存
+  document.getElementById('total-mem').textContent = d.total_mem + ' GB';
+  document.getElementById('total-sub').textContent = d.total_mem > 0 ? '资源已分配 · 可随时释放' : '已完全释放';
+}
+
+// ===== 服务单项启停 =====
+async function toggleOllama() {
+  const btn = document.getElementById('btn-ollama-toggle');
+  btn.disabled = true;
+  document.getElementById('dot-ollama').className = 'dot transition';
+  
+  if (isOllamaRunning) {
+    document.getElementById('ollama-status').textContent = '停止中...';
+    const r = await api('ollama/stop', 'POST');
+    toast(r.msg, r.ok ? 'success' : 'error');
+  } else {
+    document.getElementById('ollama-status').textContent = '启动中...';
+    const r = await api('ollama/start', 'POST');
+    toast(r.msg, r.ok ? 'success' : 'error');
+  }
+  
+  pollServiceStatus('ollama', !isOllamaRunning);
+}
+
+async function toggleWebUI() {
+  const btn = document.getElementById('btn-webui-toggle');
+  if (btn.classList.contains('deploy')) {
+    openWebUIDeployModal();
+    return;
+  }
+
+  btn.disabled = true;
+  document.getElementById('dot-webui').className = 'dot transition';
+  
+  if (isWebUIRunning) {
+    document.getElementById('webui-status').textContent = '停止中...';
+    const r = await api('webui/stop', 'POST');
+    toast(r.msg, r.ok ? 'success' : 'error');
+  } else {
+    document.getElementById('webui-status').textContent = '启动中...';
+    const r = await api('webui/start', 'POST');
+    toast(r.msg, r.ok ? 'success' : 'error');
+  }
+  
+  pollServiceStatus('webui', !isWebUIRunning);
+}
+
+// 智能探测轮询（最多等 25 秒）
+function pollServiceStatus(service, targetRunningState) {
+  let count = 0;
+  const timer = setInterval(async () => {
+    count++;
+    const d = await api('status');
+    const running = (service === 'ollama') ? d.ollama.running : d.webui.running;
+    if (running === targetRunningState || count >= 25) {
+      clearInterval(timer);
+      loadStatus();
+      loadModels();
+      const btn = (service === 'ollama') ? document.getElementById('btn-ollama-toggle') : document.getElementById('btn-webui-toggle');
+      if (btn) btn.disabled = false;
+    }
+  }, 1000);
+}
+
+// ===== 全部控制 =====
+async function control(action, btn) {
+  if (btn) {
+    btn._text = btn.textContent;
+    btn.innerHTML = '<span class="spinner"></span> 操作中...';
+    btn.disabled = true;
+  }
+  
+  const isStart = action.includes('start');
+  if (isStart) {
+    document.getElementById('dot-ollama').className = 'dot transition';
+    document.getElementById('dot-webui').className = 'dot transition';
+    document.getElementById('ollama-status').textContent = '启动中...';
+    document.getElementById('webui-status').textContent = '启动中...';
+  } else {
+    document.getElementById('ollama-status').textContent = '停止中...';
+    document.getElementById('webui-status').textContent = '停止中...';
+  }
+  
+  const r = await api(action, 'POST');
+  toast(r.msg, r.ok ? 'success' : 'error');
+
+  // 轮询等待生效
+  let tries = 0;
+  const timer = setInterval(async () => {
+    tries++;
+    const d = await api('status');
+    const allDone = isStart ? (d.ollama.running && d.webui.running) : (!d.ollama.running && !d.webui.running);
+    if (allDone || tries >= 20) {
+      clearInterval(timer);
+      if (btn) {
+        btn.textContent = btn._text;
+        btn.disabled = false;
+      }
+      loadStatus();
+      loadModels();
+    }
+  }, 1200);
+}
+
+async function unloadModel() {
+  toast('正在释放模型显存...');
+  const r = await api('model/unload', 'POST');
+  toast(r.msg, r.ok ? 'success' : 'error');
+  loadStatus();
+  loadModels();
+}
+
+function openWebUI() {
+  const host = window.location.hostname || 'localhost';
+  window.open(`http://${host}:8080`, '_blank');
+  api('open-webui', 'POST');
+}
+
+// ===== 已安装模型列表 =====
+async function loadModels() {
+  const el = document.getElementById('installed-models');
+  const models = await api('models');
+  const countEl = document.getElementById('models-count');
+  
+  if (!models || models.length === 0) {
+    countEl.textContent = '0';
+    el.innerHTML = '<div class="empty">暂无已安装模型，请在下方“在线安装”选择下载</div>';
+    return;
+  }
+  
+  countEl.textContent = models.length;
+  el.innerHTML = '<div class="model-list">' + models.map(m => `
+    <div class="model-item">
+      <div class="model-info">
+        <div class="model-title-row">
+          <span class="model-name">${m.name}</span>
+          ${m.running 
+            ? `<span class="tag tag-running">🟢 运行中 · 占用 ${m.vram} GB</span>`
+            : `<span class="tag tag-idle">⚪ 未载入显存</span>`
+          }
+          <span class="tag tag-size">${m.size}</span>
+          ${m.param_size ? `<span class="tag">${m.param_size}</span>` : ''}
+          ${m.quant ? `<span class="tag">${m.quant}</span>` : ''}
+        </div>
+      </div>
+      <div class="model-actions">
+        ${m.running
+          ? `<button class="btn-sm warning" onclick="toggleModelRun('${m.name}', false, this)">关闭运行</button>`
+          : `<button class="btn-sm success" onclick="toggleModelRun('${m.name}', true, this)">开启运行</button>`
+        }
+        <button class="btn-sm primary" onclick="openTestModal('${m.name}')">测试推理</button>
+        <button class="btn-sm danger" onclick="deleteModel('${m.name}')">删除</button>
+      </div>
+    </div>
+  `).join('') + '</div>';
+}
+
+async function toggleModelRun(name, shouldRun, btn) {
+  if (btn) {
+    btn._text = btn.innerHTML;
+    btn.innerHTML = `<span class="spinner"></span> ${shouldRun ? '载入中...' : '释放中...'}`;
+    btn.disabled = true;
+  }
+  toast(`正在${shouldRun ? '载入模型到显存' : '释放模型显存'}: ${name}...`);
+  try {
+    const r = await api(shouldRun ? 'model/load' : 'model/unload', 'POST', { model: name });
+    toast(r.msg, r.ok ? 'success' : 'error');
+  } catch (err) {
+    toast(`操作异常: ${err.message}`, 'error');
+  } finally {
+    await loadModels();
+    await loadStatus();
+  }
+}
+
+async function deleteModel(name) {
+  if (!confirm(`确定要彻底删除本地模型 ${name} 吗？
+将释放对应磁盘空间。`)) return;
+  toast(`正在删除 ${name}...`);
+  const r = await api('model/delete', 'POST', { model: name });
+  toast(r.msg, r.ok ? 'success' : 'error');
+  loadModels();
+  loadStatus();
+}
+
+// ===== 异步下载任务监控 =====
+function startPullStatusPolling() {
+  if (pullPoller) clearInterval(pullPoller);
+  pullPoller = setInterval(checkPullStatus, 1000);
+}
+
+async function checkPullStatus() {
+  const task = await api('model/pull/status');
+  const card = document.getElementById('pull-progress-card');
+  if (!task) return;
+
+  if (task.active) {
+    if (!pullPoller) startPullStatusPolling();
+    card.classList.add('show');
+    card.style.borderColor = '#1f6feb';
+    document.getElementById('pull-model-name').textContent = task.model;
+    document.getElementById('pull-bar').style.background = 'linear-gradient(90deg, #1f6feb, #58a6ff)';
+    document.getElementById('pull-bar').style.width = task.percent + '%';
+    
+    let leftInfo = `${task.status} (${task.percent}%)`;
+    if (task.completed_str && task.total_str) {
+      leftInfo += ` · ${task.completed_str} / ${task.total_str}`;
+    }
+    document.getElementById('pull-status-text').textContent = leftInfo;
+    
+    let rightInfo = [];
+    if (task.speed) rightInfo.push(task.speed);
+    if (task.eta) rightInfo.push(task.eta);
+    document.getElementById('pull-speed-text').textContent = rightInfo.join(' · ') || '计算中...';
+  } else {
+    if (task.done) {
+      if (task.status === '下载完成') {
+        document.getElementById('pull-bar').style.width = '100%';
+        document.getElementById('pull-bar').style.background = 'linear-gradient(90deg, #2ea043, #34c759)';
+        document.getElementById('pull-status-text').innerHTML = '<span style="color:var(--green);font-weight:600;">✅ 模型已成功安装并校验通过！</span>';
+        document.getElementById('pull-speed-text').textContent = '';
+        toast(`模型 ${task.model} 安装成功！`, 'success');
+        loadModels();
+        loadStatus();
+        setTimeout(() => {
+          card.classList.remove('show');
+          card.style.borderColor = '';
+        }, 5000);
+      } else if (task.status === '已取消') {
+        toast('下载任务已取消');
+        setTimeout(() => card.classList.remove('show'), 2500);
+      } else if (task.error || task.status.includes('失败') || task.status.includes('中断')) {
+        card.classList.add('show');
+        card.style.borderColor = 'var(--red)';
+        document.getElementById('pull-bar').style.background = 'var(--red)';
+        document.getElementById('pull-status-text').innerHTML = `<span style="color:var(--red);font-weight:600;">❌ 未能完成安装: ${task.error || task.status}</span>`;
+        document.getElementById('pull-speed-text').innerHTML = `<button class="btn-sm primary" onclick="pullModel('${task.model}')">重新尝试</button> <button class="btn-sm" onclick="dismissPullCard()">关闭提示</button>`;
+        toast(`下载未完成: ${task.error || task.status}`, 'error');
+      }
+      clearInterval(pullPoller);
+      pullPoller = null;
+    } else {
+      card.classList.remove('show');
+      clearInterval(pullPoller);
+      pullPoller = null;
+    }
+  }
+}
+
+function dismissPullCard() {
+  const card = document.getElementById('pull-progress-card');
+  card.classList.remove('show');
+  card.style.borderColor = '';
+}
+
+async function pullModel(name) {
+  toast(`准备拉取 ${name}...`);
+  const r = await api('model/pull', 'POST', { model: name });
+  if (r.ok) {
+    toast(r.msg, 'success');
+    checkPullStatus();
+    startPullStatusPolling();
+  } else {
+    toast(r.msg, 'error');
+  }
+}
+
+async function pullCustom() {
+  const input = document.getElementById('custom-model');
+  const model = input.value.trim();
+  if (!model) { toast('请输入模型完整名称', 'error'); return; }
+  await pullModel(model);
+  input.value = '';
+}
+
+async function cancelPull() {
+  if (!confirm('确认终止当前下载吗？')) return;
+  const r = await api('model/pull/cancel', 'POST');
+  toast(r.msg);
+}
+
+// ===== Open WebUI 一键部署逻辑 =====
+let webuiInstallPoller = null;
+
+function openWebUIDeployModal() {
+  const modal = document.getElementById('webui-install-modal');
+  modal.classList.add('show');
+  checkWebUIInstallStatus();
+}
+
+function closeWebUIModal() {
+  const modal = document.getElementById('webui-install-modal');
+  modal.classList.remove('show');
+  if (webuiInstallPoller) {
+    clearInterval(webuiInstallPoller);
+    webuiInstallPoller = null;
+  }
+}
+
+async function checkWebUIInstallStatus() {
+  const res = await api('webui/install/status');
+  if (!res) return;
+  const stepEl = document.getElementById('webui-step-text');
+  const progText = document.getElementById('webui-progress-text');
+  const progBar = document.getElementById('webui-progress-bar');
+  const logEl = document.getElementById('webui-install-log');
+  const btnStart = document.getElementById('btn-start-webui-install');
+
+  if (res.in_progress) {
+    btnStart.disabled = true;
+    btnStart.innerHTML = '<span class="spinner"></span> 部署中...';
+    stepEl.textContent = res.step || '正在配置环境...';
+    progText.textContent = (res.percent || 0) + '%';
+    progBar.style.width = (res.percent || 0) + '%';
+    if (!webuiInstallPoller) {
+      webuiInstallPoller = setInterval(checkWebUIInstallStatus, 1500);
+    }
+  } else if (res.done) {
+    btnStart.disabled = false;
+    if (res.success) {
+      btnStart.textContent = '再次安装/修复';
+      stepEl.innerHTML = '<span style="color:var(--green);font-weight:600;">🎉 部署圆满成功！可在卡片点击“启动”。</span>';
+      progText.textContent = '100%';
+      progBar.style.width = '100%';
+      loadStatus();
+    } else {
+      btnStart.textContent = '重试部署';
+      stepEl.innerHTML = `<span style="color:var(--red);font-weight:600;">❌ 部署遇到问题: ${res.error || '请查看下方日志'}</span>`;
+    }
+    if (webuiInstallPoller) {
+      clearInterval(webuiInstallPoller);
+      webuiInstallPoller = null;
+    }
+  }
+
+  if (res.log && res.log.length > 0) {
+    logEl.textContent = res.log.join('\n');
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+}
+
+async function startWebUIInstall() {
+  const btnStart = document.getElementById('btn-start-webui-install');
+  btnStart.disabled = true;
+  btnStart.innerHTML = '<span class="spinner"></span> 初始化部署任务...';
+  
+  const res = await api('webui/install', 'POST');
+  if (res.ok) {
+    toast(res.msg, 'success');
+    checkWebUIInstallStatus();
+    if (!webuiInstallPoller) {
+      webuiInstallPoller = setInterval(checkWebUIInstallStatus, 1500);
+    }
+  } else {
+    toast(res.msg, 'error');
+    btnStart.disabled = false;
+    btnStart.textContent = '开始一键部署';
+  }
+}
+
+// ===== 硬件诊断与全家桶推荐 =====
+let currentRecommendedCombo = [];
+
+function renderHardwareWizard(tier) {
+  const banner = document.getElementById('hardware-wizard-banner');
+  if (!banner || !tier) return;
+  
+  const combo = tier.recommended_combo || {};
+  currentRecommendedCombo = combo.models || [];
+
+  const tagEl = document.getElementById('wizard-tag');
+  const titleEl = document.getElementById('wizard-title');
+  const descEl = document.getElementById('wizard-desc');
+  const pillsEl = document.getElementById('wizard-pills');
+  const comboBtn = document.getElementById('btn-batch-install');
+
+  tagEl.textContent = `🎯 硬件算力诊断 · ${tier.tag || tier.tier_name || '智能推荐'}`;
+  titleEl.textContent = `${tier.tier_name || ''} · ${combo.title || '黄金装机推荐'}`;
+  descEl.textContent = tier.desc || '';
+
+  const items = [
+    { name: combo.chat_model, role: combo.chat_model_title || '主力对话模型' },
+    { name: combo.embed_model, role: combo.embed_model_title || '知识库向量模型' }
+  ].filter(x => x.name);
+
+  if (items.length > 0) {
+    pillsEl.innerHTML = items.map(m => `
+      <span class="wizard-pill">
+        <span>✨</span>
+        <strong>${m.name}</strong>
+        <span style="color:var(--text-dim);font-size:10px;">(${m.role})</span>
+      </span>
+    `).join('') + (combo.est_vram ? `<span class="wizard-pill" style="border-color:rgba(46,160,67,0.4);color:#3fb950;">预计显存 ~${combo.est_vram}</span>` : '');
+    comboBtn.style.display = 'inline-block';
+  } else {
+    pillsEl.innerHTML = '';
+    comboBtn.style.display = 'none';
+  }
+  banner.style.display = 'flex';
+}
+
+async function installRecommendedCombo() {
+  if (!currentRecommendedCombo || currentRecommendedCombo.length === 0) {
+    toast('当前未检测到推荐组合', 'error');
+    return;
+  }
+  if (!confirm(`准备为您批量下载并配置当前硬件黄金组合：\n\n${currentRecommendedCombo.join(' + ')}\n\n系统将自动排队依次静默下载，是否继续？`)) return;
+  
+  toast(`开始批量部署黄金组合: ${currentRecommendedCombo.join(', ')}...`);
+  const r = await api('model/batch-pull', 'POST', { models: currentRecommendedCombo });
+  if (r.ok) {
+    toast(r.msg, 'success');
+    checkPullStatus();
+    startPullStatusPolling();
+  } else {
+    toast(r.msg, 'error');
+  }
+}
+
+// ===== 在线推荐列表 =====
+async function loadOnlineModels() {
+  const resp = await api('online-models');
+  if (!resp) return;
+
+  if (resp.tier) {
+    renderHardwareWizard(resp.tier);
+  }
+
+  onlineModelsData = resp.categories || {};
+  const tabs = document.getElementById('category-tabs');
+  const categories = Object.keys(onlineModelsData);
+  if (categories.length === 0) return;
+
+  tabs.innerHTML = categories.map((cat, i) =>
+    `<span class="tab ${i===0?'active':''}" onclick="selectCategory('${cat}', this)">${cat}</span>`
+  ).join('');
+  selectCategory(categories[0]);
+}
+
+function selectCategory(cat, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const list = document.getElementById('online-models');
+  const models = onlineModelsData[cat] || [];
+  list.innerHTML = models.map(m => {
+    let matchBadge = '';
+    if (m.match_level === 'golden') {
+      matchBadge = `<span class="tag" style="background:rgba(210,153,34,0.2);color:#e3b341;border:1px solid rgba(210,153,34,0.4);">⭐ ${m.match_text}</span>`;
+    } else if (m.match_level === 'smooth') {
+      matchBadge = `<span class="tag" style="background:rgba(46,160,67,0.15);color:#3fb950;border:1px solid rgba(46,160,67,0.3);">🟢 ${m.match_text}</span>`;
+    } else if (m.match_level === 'tight') {
+      matchBadge = `<span class="tag" style="background:rgba(210,153,34,0.15);color:#d29922;border:1px solid rgba(210,153,34,0.3);">🟡 ${m.match_text}</span>`;
+    } else if (m.match_level === 'heavy') {
+      matchBadge = `<span class="tag" style="background:rgba(248,81,73,0.15);color:#f85149;border:1px solid rgba(248,81,73,0.3);">🔴 ${m.match_text}</span>`;
+    }
+
+    const vramInfo = m.est_vram ? `<span class="tag" style="background:#21262d;color:var(--text-dim);">需~${m.est_vram}GB显存</span>` : '';
+
+    return `
+      <div class="online-model-card">
+        <div>
+          <div class="online-model-name" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span>${m.name}</span>
+            ${matchBadge}
+            ${vramInfo}
+          </div>
+          <div class="online-model-desc">${m.desc}</div>
+        </div>
+        <div class="online-model-footer">
+          <button class="btn-sm primary" onclick="pullModel('${m.name}')">一键下载</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ===== 测试弹窗 Modal =====
+function openTestModal(modelName) {
+  currentActiveTestModel = modelName;
+  document.getElementById('modal-model-title').textContent = `测试模型: ${modelName}`;
+  document.getElementById('test-result').textContent = '点击“发送测试”启动本地推理...';
+  document.getElementById('test-time-badge').textContent = '推理耗时: --';
+  document.getElementById('test-modal').classList.add('show');
+}
+
+function closeTestModal() {
+  document.getElementById('test-modal').classList.remove('show');
+}
+
+function setPrompt(text) {
+  document.getElementById('test-prompt').value = text;
+}
+
+async function executeTest() {
+  const prompt = document.getElementById('test-prompt').value.trim();
+  if (!prompt) { toast('提示词不能为空', 'error'); return; }
+
+  const btn = document.getElementById('btn-run-test');
+  const resultBox = document.getElementById('test-result');
+  const timeBadge = document.getElementById('test-time-badge');
+
+  btn.innerHTML = '<span class="spinner"></span> 推理计算中...';
+  btn.disabled = true;
+  resultBox.textContent = '正在调用模型推理中，首次加载可能需要载入显存，请稍候...';
+  timeBadge.textContent = '推理耗时: 计算中...';
+
+  const r = await api('model/test', 'POST', { model: currentActiveTestModel, prompt: prompt });
+  btn.textContent = '发送测试';
+  btn.disabled = false;
+
+  if (r.ok) {
+    resultBox.textContent = r.msg;
+    timeBadge.textContent = `推理耗时: ${r.time} 秒`;
+    loadStatus(); // 更新显存状态
+  } else {
+    resultBox.textContent = `推理错误: ${r.msg}`;
+    timeBadge.textContent = '推理失败';
+  }
+}
+
+function copyTestResult() {
+  const text = document.getElementById('test-result').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    toast('已复制到剪贴板', 'success');
+  }).catch(() => {
+    toast('复制失败，请手动选择', 'error');
+  });
+}
+
+let currentLanUrl = '';
+
+function copyLanUrl() {
+  if (!currentLanUrl) return;
+  navigator.clipboard.writeText(currentLanUrl).then(() => {
+    toast(`已复制局域网地址: ${currentLanUrl}，手机连接同WiFi即可直接打开！`, 'success');
+  }).catch(() => {
+    toast(`局域网地址: ${currentLanUrl}`);
+  });
+}
+
+// ===== 系统信息 =====
+async function loadSystem() {
+  const d = await api('system');
+  const el = document.getElementById('system-info');
+
+  if (d.network && d.network.lan_url) {
+    currentLanUrl = d.network.lan_url;
+    const badge = document.getElementById('lan-badge');
+    const badgeText = document.getElementById('lan-url-text');
+    badgeText.textContent = d.network.lan_url;
+    badge.style.display = 'inline-flex';
+  }
+
+  const tagline = document.getElementById('header-tagline');
+  if (tagline && d.os && d.cpu) {
+    tagline.textContent = `小白也能一键搭建的本地 AI 智算平台 · ${d.os} (${d.cpu} / ${d.mem_total_gb}GB 内存) · 支持内网对接知识库`;
+  }
+
+  el.innerHTML = `
+    <div class="sys-grid">
+      <div class="sys-item"><div class="label">操作系统平台</div><div class="value" style="color:var(--accent);">${d.os || '跨平台'}</div></div>
+      <div class="sys-item"><div class="label">CPU 处理器</div><div class="value">${d.cpu}</div></div>
+      <div class="sys-item"><div class="label">系统内存总量</div><div class="value">${d.mem_total_gb} GB</div></div>
+      <div class="sys-item"><div class="label">可用磁盘空间</div><div class="value">${d.disk}</div></div>
+    </div>
+  `;
+}
+
+// ===== 初始化 =====
+function refreshAll() {
+  loadStatus();
+  loadModels();
+  loadSystem();
+  checkPullStatus();
+  toast('状态已刷新');
+}
+
+loadStatus();
+loadModels();
+loadOnlineModels();
+loadSystem();
+checkPullStatus();
+
+// 后台 10 秒定时状态静默刷新
+setInterval(() => {
+  loadStatus();
+  checkPullStatus();
+}, 10000);
+</script>
+</body>
+</html>
