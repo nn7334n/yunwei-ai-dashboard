@@ -773,7 +773,7 @@ body {
 }
 .btn-biz-secondary:hover { background: rgba(255, 255, 255, 0.12); border-color: var(--accent); }
 
-/* 商业与社群模态弹窗样式 */
+/* 商业合作与系统定制弹窗样式 */
 .biz-modal-tabs {
   display: flex;
   gap: 8px;
@@ -863,8 +863,8 @@ body {
     <div class="tagline" id="header-tagline">小白也能一键搭建的本地 AI 智算平台 · 智能推荐大模型 · 一键部署 Web 对话 · 支持内网对接知识库</div>
   </div>
   <div class="header-actions">
-    <button class="nav-btn nav-btn-community" onclick="openBizModal('community')" title="点击加入交流群并领取资料包">
-      💬 交流群 / 领资料
+    <button class="nav-btn nav-btn-community" onclick="openBizModal('community')" title="点击咨询业务合作与系统开发">
+      🤝 业务合作 / 找我做系统
     </button>
     <button class="nav-btn nav-btn-biz" onclick="openBizModal('products')" title="点击查看企业级商业产品矩阵与源码交付">
       🚀 企业商业方案
@@ -1022,7 +1022,7 @@ body {
     </div>
   </div>
   <div class="biz-banner-actions">
-    <button class="btn-biz-secondary" onclick="openBizModal('community')">💬 技术咨询 / 进群</button>
+    <button class="btn-biz-secondary" onclick="openBizModal('community')">🤝 业务咨询 / 找我做系统</button>
     <button class="btn-biz-primary" onclick="openBizModal('products')">🚀 查看商业产品全家桶</button>
   </div>
 </div>
@@ -1091,33 +1091,40 @@ body {
   <div class="modal-dialog" style="max-width: 680px;">
     <div class="modal-header">
       <h3 style="display: flex; align-items: center; gap: 8px;">
-        <span>🚀 云微传媒 · 商业生态与技术交流</span>
+        <span>💼 云微传媒 · 商业合作与系统定制</span>
       </h3>
       <button class="modal-close" onclick="closeBizModal()">&times;</button>
     </div>
     <div class="modal-body">
       <div class="biz-modal-tabs">
-        <button class="biz-tab-btn active" data-tab="community" onclick="switchBizTab('community')">🎁 进群交流 & 领干货资料</button>
+        <button class="biz-tab-btn active" data-tab="community" onclick="switchBizTab('community')">🤝 业务合作 & 需求对接</button>
         <button class="biz-tab-btn" data-tab="products" onclick="switchBizTab('products')">💼 企业商业系统全家桶</button>
       </div>
 
-      <!-- Tab 1: Community & Gifts -->
+      <!-- Tab 1: Business Cooperation & Gifts -->
       <div class="biz-tab-content active" id="biz-tab-community">
         <div class="wechat-box">
           <div class="wechat-info">
-            <div style="font-size: 14px; font-weight: 700; color: var(--text-title);">官方微信客服 / 交流社群</div>
-            <div style="font-size: 12px; color: var(--text-dim);">添加官方微信，进入本地大模型落地与 AI 应用技术交流群</div>
-            <div style="margin-top: 6px; font-size: 13px; color: #58a6ff; font-family: monospace;">微信号：<strong>nn7334n</strong> (电话: 18922454490)</div>
+            <div style="font-size: 14px; font-weight: 700; color: var(--text-title);">业务负责人微信 / 商业合作直连</div>
+            <div style="font-size: 12px; color: var(--text-dim);">有系统开发、源码采购、二开定制等业务要做？直接添加负责人微信详聊！</div>
+            <div style="margin-top: 6px; font-size: 13px; color: #58a6ff; font-family: monospace; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+              <span>负责人微信：<strong>nn7334n</strong></span>
+              <span>官方网站：<a href="https://www.dyman.cn" target="_blank" style="color: #58a6ff; text-decoration: underline;">www.dyman.cn ↗</a></span>
+            </div>
           </div>
-          <button class="btn-sm" style="padding: 8px 16px; background: var(--green); color: #fff; border: none; font-weight: 600; cursor: pointer;" onclick="copyWechatId('nn7334n')">一键复制微信号</button>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn-sm" style="padding: 8px 16px; background: var(--green); color: #fff; border: none; font-weight: 600; cursor: pointer;" onclick="copyWechatId('nn7334n')">一键复制微信</button>
+            <a href="https://www.dyman.cn" target="_blank" class="btn-sm" style="padding: 8px 14px; background: rgba(88,166,255,0.15); color: var(--accent); border: 1px solid var(--accent); font-weight: 600; text-decoration: none; display: inline-flex; align-items: center;">访问官网 ↗</a>
+          </div>
         </div>
 
         <div class="gift-list">
-          <strong style="color: var(--green); display: block; margin-bottom: 6px;">🎁 添加微信并备注【AI】，免费赠送精选独家干货包：</strong>
-          • <strong>《2026 企业本地大模型与知识库私有化落地全指南》</strong>（实战落地手册 PDF）<br>
-          • <strong>《50+ 行业企业级高质量提示词与知识库语料库精粹》</strong>（电商/客服/代码/营销）<br>
-          • <strong>《主流开源大模型（Qwen2.5/DeepSeek-R1/Llama3）硬件适配与实测横评表》</strong><br>
-          • 遇到本地部署或模型加载报错？社群内工程师 1 对 1 免费答疑支持！
+          <strong style="color: var(--green); display: block; margin-bottom: 6px;">🎁 添加微信备注【业务合作】，直接交流需求并免费领取商业系统全案：</strong>
+          • <strong>商业系统实操体验</strong>：免费开通<strong>《云微 AI 智能员工/企业知识库商业版》</strong>公网多端在线演示账号（实测公网协作与企微打通）<br>
+          • <strong>电商推客爆单全案</strong>：<strong>《微信小店推客私域分佣爆单 SOP + 裂变系统落地指南》</strong>（直击商家带货分佣刚需，助推推客系统成交）<br>
+          • <strong>矩阵获客实战手册</strong>：<strong>《AI 短视频/图文多平台矩阵获客实操手册与线索自动承接链路》</strong>（配套 AI 矩阵获客系统实战打法）<br>
+          • <strong>官方系统选型总表</strong>：<strong>《云微传媒 10+ 款成熟商用系统【功能清单矩阵 + 源码交付报价总表】》</strong>（支持源码交付、独立部署）<br>
+          • <strong>架构师 1 对 1 咨询</strong>：资深技术总监免费为您评估企业业务上云、私有化部署二开与定制开发方案！
         </div>
       </div>
 
