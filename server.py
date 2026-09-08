@@ -904,9 +904,6 @@ class DashboardHandler(SimpleHTTPRequestHandler):
                 return True, running_map[f"{m_name}:latest"]
             if m_name.endswith(':latest') and m_name[:-7] in running_map:
                 return True, running_map[m_name[:-7]]
-            for rk, rv in running_map.items():
-                if rk.startswith(m_name) or m_name.startswith(rk):
-                    return True, rv
             return False, 0.0
 
         try:
